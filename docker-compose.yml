@@ -3,22 +3,37 @@ version: '3.8'
 services:
   app:
     build: .
+    container_name: players-app
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - app-network
 
   redis:
-    image: redis:alpine
+    image: redis:latest
+    container_name: redis-container
+    command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "6379:6379" # ✅ corrected port
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
-  redis_data:
+  redis-data:
+
+networks:
+  app-network:
