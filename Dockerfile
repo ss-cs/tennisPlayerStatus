@@ -1,8 +1,8 @@
 # Use an official Node.js runtime as the base image
-FROM node:20
+FROM node:16-alpine
 
 # Set the working directory in the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy the package.json and package-lock.json
 COPY package*.json ./
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Start the Node.js app
-CMD ["node", "app.js"]
+CMD ["npm", "start"]
