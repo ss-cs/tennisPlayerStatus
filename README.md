@@ -15,7 +15,7 @@ A Node.js REST API that provides information about tennis players with Redis cac
 
 ## Prerequisites
 
-- Node.js (v16.x)
+- Node.js (v22.x)
 - Redis server
 - npm (comes with Node.js)
 - Docker and Docker Compose (for containerized deployment)
