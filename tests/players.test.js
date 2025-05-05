@@ -1,66 +1,6 @@
-// Mock modules before requiring the code under test
-jest.mock("redis", () => ({
-  createClient: jest.fn(() => ({
-    connect: jest.fn().mockResolvedValue(),
-    on: jest.fn(),
-    get: jest.fn(),
-    setEx: jest.fn().mockResolvedValue(),
-    quit: jest.fn().mockResolvedValue(),
-  })),
-}));
-
-// Mock axios instead of node-fetch
-jest.mock("axios", () => ({
-  get: jest.fn(),
-}));
-
-// Mock logger
-jest.mock("../src/utils/logger", () => ({
-  info: jest.fn(),
-  error: jest.fn(),
-}));
-
-// Mock redis client utility
-jest.mock("../src/utils/redisClient", () => ({
-  get: jest.fn(),
-  setEx: jest.fn(),
-}));
-
-// Suppress console.log output during tests
-console.log = jest.fn();
-console.error = jest.fn();
-
-// Mock Express
-jest.mock("express", () => {
-  const router = {
-    get: jest.fn(),
-    post: jest.fn(),
-    use: jest.fn(),
-  };
-
-  const expressMock = () => {
-    const app = {
-      get: jest.fn().mockReturnThis(),
-      post: jest.fn().mockReturnThis(),
-      use: jest.fn().mockReturnThis(),
-      listen: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      Router: jest.fn(() => router),
-    };
-
-    return app;
-  };
-
-  expressMock.Router = jest.fn(() => router);
-  expressMock.json = jest.fn(() => jest.fn());
-  expressMock.urlencoded = jest.fn(() => jest.fn());
-  expressMock.static = jest.fn(() => jest.fn());
-
-  return expressMock;
-});
+require("./__mocks__/setupMocks");
 
 // Import after all mocks are set up
-const redis = require("redis");
 const express = require("express");
 const axios = require("axios");
 const redisClient = require("../src/utils/redisClient");
@@ -158,8 +98,50 @@ describe("Tennis Players API", () => {
     it("should fetch players from cache when available", async () => {
       const mockCachedData = {
         players: [
-          { id: 1, name: "Roger Federer", country: "Switzerland" },
-          { id: 2, name: "Rafael Nadal", country: "Spain" },
+          {
+            id: 52,
+            firstname: "Novak",
+            lastname: "Djokovic",
+            shortname: "N.DJO",
+            sex: "M",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+              code: "SRB",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+            data: {
+              rank: 2,
+              points: 2542,
+              weight: 80000,
+              height: 188,
+              age: 31,
+              last: [1, 1, 1, 1, 1],
+            },
+          },
+          {
+            id: 95,
+            firstname: "Venus",
+            lastname: "Williams",
+            shortname: "V.WIL",
+            sex: "F",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136449.jpg",
+              code: "USA",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136450.jpg",
+            data: {
+              rank: 52,
+              points: 1105,
+              weight: 74000,
+              height: 185,
+              age: 38,
+              last: [0, 1, 0, 0, 1],
+            },
+          },
         ],
       };
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockCachedData));
@@ -175,9 +157,20 @@ describe("Tennis Players API", () => {
       expect(redisClient.get).toHaveBeenCalledWith("players_cache");
       expect(axios.get).not.toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith("Serving from Redis cache");
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ id: 1, name: "Roger Federer" }),
+          expect.objectContaining({
+            id: 52,
+            firstname: "Novak",
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+            country: expect.objectContaining({
+              code: "SRB",
+              picture:
+                "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+            }),
+          }),
         ])
       );
     });
@@ -202,6 +195,7 @@ describe("Tennis Players API", () => {
         300,
         expect.any(String)
       );
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ id: 52 }),
@@ -294,6 +288,7 @@ describe("Tennis Players API", () => {
 
       await getPlayerById(req, res);
 
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 52,

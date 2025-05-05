@@ -45,7 +45,7 @@ async function getAllPlayers(req, res) {
   try {
     const data = await getPlayersData();
     const sorted = data.players.sort((a, b) => a.id - b.id);
-    res.json(sorted);
+    res.status(200).json(sorted);
   } catch {
     res.status(500).json({ error: "Failed to fetch players data" });
   }
@@ -61,7 +61,7 @@ async function getPlayerById(req, res) {
       return res.status(404).json({ error: `Player with id ${id} not found` });
     }
 
-    res.json(player);
+    res.status(200).json(player);
   } catch {
     res.status(500).json({ error: "Failed to fetch player data" });
   }
