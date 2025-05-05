@@ -65,14 +65,80 @@ const express = require("express");
 const axios = require("axios");
 const redisClient = require("../src/utils/redisClient");
 const logger = require("../src/utils/logger");
-const { getAllPlayers, getPlayerById } = require("../src/controllers/playersController");
+const {
+  getAllPlayers,
+  getPlayerById,
+} = require("../src/controllers/playersController");
 
 // Mock data for players
 const mockPlayers = {
   players: [
-    { id: 1, name: "Roger Federer", country: "Switzerland" },
-    { id: 2, name: "Rafael Nadal", country: "Spain" },
-    { id: 3, name: "Novak Djokovic", country: "Serbia" },
+    {
+      id: 52,
+      firstname: "Novak",
+      lastname: "Djokovic",
+      shortname: "N.DJO",
+      sex: "M",
+      country: {
+        picture:
+          "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+        code: "SRB",
+      },
+      picture:
+        "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+      data: {
+        rank: 2,
+        points: 2542,
+        weight: 80000,
+        height: 188,
+        age: 31,
+        last: [1, 1, 1, 1, 1],
+      },
+    },
+    {
+      id: 95,
+      firstname: "Venus",
+      lastname: "Williams",
+      shortname: "V.WIL",
+      sex: "F",
+      country: {
+        picture:
+          "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136449.jpg",
+        code: "USA",
+      },
+      picture:
+        "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136450.jpg",
+      data: {
+        rank: 52,
+        points: 1105,
+        weight: 74000,
+        height: 185,
+        age: 38,
+        last: [0, 1, 0, 0, 1],
+      },
+    },
+    {
+      id: 65,
+      firstname: "Stan",
+      lastname: "Wawrinka",
+      shortname: "S.WAW",
+      sex: "M",
+      country: {
+        picture:
+          "https://i.eurosport.com/_iss_/geo/country/flag/large/2213.png",
+        code: "SUI",
+      },
+      picture:
+        "https://i.eurosport.com/_iss_/person/pp_clubteam/large/325225.jpg",
+      data: {
+        rank: 21,
+        points: 1784,
+        weight: 81000,
+        height: 183,
+        age: 33,
+        last: [1, 1, 1, 0, 1],
+      },
+    },
   ],
 };
 
@@ -138,9 +204,9 @@ describe("Tennis Players API", () => {
       );
       expect(res.json).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ id: 1 }),
-          expect.objectContaining({ id: 2 }),
-          expect.objectContaining({ id: 3 }),
+          expect.objectContaining({ id: 52 }),
+          expect.objectContaining({ id: 95 }),
+          expect.objectContaining({ id: 65 }),
         ])
       );
     });
@@ -157,7 +223,10 @@ describe("Tennis Players API", () => {
 
       await getAllPlayers(req, res);
 
-      expect(logger.error).toHaveBeenCalledWith("API error:", expect.any(Error));
+      expect(logger.error).toHaveBeenCalledWith(
+        "API error:",
+        expect.any(Error)
+      );
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: "Failed to fetch players data",
@@ -169,13 +238,55 @@ describe("Tennis Players API", () => {
     it("should return a specific player by ID", async () => {
       const mockCachedData = {
         players: [
-          { id: 1, name: "Roger Federer", country: "Switzerland" },
-          { id: 2, name: "Rafael Nadal", country: "Spain" },
+          {
+            id: 52,
+            firstname: "Novak",
+            lastname: "Djokovic",
+            shortname: "N.DJO",
+            sex: "M",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+              code: "SRB",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+            data: {
+              rank: 2,
+              points: 2542,
+              weight: 80000,
+              height: 188,
+              age: 31,
+              last: [1, 1, 1, 1, 1],
+            },
+          },
+          {
+            id: 95,
+            firstname: "Venus",
+            lastname: "Williams",
+            shortname: "V.WIL",
+            sex: "F",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136449.jpg",
+              code: "USA",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136450.jpg",
+            data: {
+              rank: 52,
+              points: 1105,
+              weight: 74000,
+              height: 185,
+              age: 38,
+              last: [0, 1, 0, 0, 1],
+            },
+          },
         ],
       };
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockCachedData));
 
-      const req = { params: { id: "1" } };
+      const req = { params: { id: "52" } };
       const res = {
         json: jest.fn(),
         status: jest.fn().mockReturnThis(),
@@ -185,9 +296,15 @@ describe("Tennis Players API", () => {
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 1,
-          name: "Roger Federer",
-          country: "Switzerland",
+          id: 52,
+          firstname: "Novak",
+          picture:
+            "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+          country: expect.objectContaining({
+            code: "SRB",
+            picture:
+              "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+          }),
         })
       );
     });
@@ -195,8 +312,50 @@ describe("Tennis Players API", () => {
     it("should return 404 for non-existent player", async () => {
       const mockCachedData = {
         players: [
-          { id: 1, name: "Roger Federer", country: "Switzerland" },
-          { id: 2, name: "Rafael Nadal", country: "Spain" },
+          {
+            id: 52,
+            firstname: "Novak",
+            lastname: "Djokovic",
+            shortname: "N.DJO",
+            sex: "M",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+              code: "SRB",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+            data: {
+              rank: 2,
+              points: 2542,
+              weight: 80000,
+              height: 188,
+              age: 31,
+              last: [1, 1, 1, 1, 1],
+            },
+          },
+          {
+            id: 95,
+            firstname: "Venus",
+            lastname: "Williams",
+            shortname: "V.WIL",
+            sex: "F",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136449.jpg",
+              code: "USA",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136450.jpg",
+            data: {
+              rank: 52,
+              points: 1105,
+              weight: 74000,
+              height: 185,
+              age: 38,
+              last: [0, 1, 0, 0, 1],
+            },
+          },
         ],
       };
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockCachedData));
@@ -218,8 +377,50 @@ describe("Tennis Players API", () => {
     it("should handle invalid ID format", async () => {
       const mockCachedData = {
         players: [
-          { id: 1, name: "Roger Federer", country: "Switzerland" },
-          { id: 2, name: "Rafael Nadal", country: "Spain" },
+          {
+            id: 52,
+            firstname: "Novak",
+            lastname: "Djokovic",
+            shortname: "N.DJO",
+            sex: "M",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/geo/country/flag/medium/6944.png",
+              code: "SRB",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/565920.jpg",
+            data: {
+              rank: 2,
+              points: 2542,
+              weight: 80000,
+              height: 188,
+              age: 31,
+              last: [1, 1, 1, 1, 1],
+            },
+          },
+          {
+            id: 95,
+            firstname: "Venus",
+            lastname: "Williams",
+            shortname: "V.WIL",
+            sex: "F",
+            country: {
+              picture:
+                "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136449.jpg",
+              code: "USA",
+            },
+            picture:
+              "https://i.eurosport.com/_iss_/person/pp_clubteam/large/136450.jpg",
+            data: {
+              rank: 52,
+              points: 1105,
+              weight: 74000,
+              height: 185,
+              age: 38,
+              last: [0, 1, 0, 0, 1],
+            },
+          },
         ],
       };
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockCachedData));
@@ -239,7 +440,9 @@ describe("Tennis Players API", () => {
     });
 
     it("should handle Redis errors gracefully", async () => {
-      redisClient.get.mockRejectedValueOnce(new Error("Redis connection error"));
+      redisClient.get.mockRejectedValueOnce(
+        new Error("Redis connection error")
+      );
       axios.get.mockRejectedValueOnce(new Error("API error"));
 
       const req = { params: { id: "1" } };
@@ -250,8 +453,14 @@ describe("Tennis Players API", () => {
 
       await getPlayerById(req, res);
 
-      expect(logger.error).toHaveBeenCalledWith("Redis error, falling back to API:", expect.any(Error));
-      expect(logger.error).toHaveBeenCalledWith("API error:", expect.any(Error));
+      expect(logger.error).toHaveBeenCalledWith(
+        "Redis error, falling back to API:",
+        expect.any(Error)
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "API error:",
+        expect.any(Error)
+      );
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         error: "Failed to fetch player data",
